@@ -325,21 +325,18 @@ import urllib.parse
 import hashlib
 
 def generate_check_mac_value(merchant_data, hash_key, hash_iv):
+
+    encoded_chars = []
+    char_to_encode = "–_.!*()"
+
     sorted_data = sorted(merchant_data.items())
     
     param_str = '&'.join(['{}={}'.format(key, value) for key, value in sorted_data])
     
     param_str = 'HashKey={}&{}&HashIV={}'.format(hash_key, param_str, hash_iv)
     
-    result = custom_urlencode(param_str)
-
-    return result
-
-def custom_urlencode(input_str):
-    encoded_chars = []
-    char_to_encode = "–_.!*()"
     
-    for char in input_str:
+    for char in param_str:
         if char in char_to_encode:
             encoded_chars.append(char)
         elif char == " ":
@@ -350,18 +347,29 @@ def custom_urlencode(input_str):
             encoded_chars.append("%5c")
         else:
             encoded_chars.append(urllib.parse.quote(char))
+
     res = ''.join(encoded_chars)
+
     lowercase_data = res.lower()
+
+    #! 轉碼sha256
     hash_obj = hashlib.sha256()
     hash_obj.update(lowercase_data.encode('utf-8'))
     hash_value = hash_obj.hexdigest()
     check_mac_value = hash_value.upper()
-    return check_mac_value
+
+    merchant_data['CheckMacValue'] = check_mac_value
+
+    #! 發出請求
+    url = "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5/"
+    response = req.post(url, data=merchant_data)
+
+    return response.text
 
 #! 測試data
 merchant_data = {
     'MerchantID': '3002607',
-    'MerchantTradeNo': 'ecpay20230312153023',
+    'MerchantTradeNo': 'ecpay20230312153099',
     'MerchantTradeDate': '2023/03/12 15:30:23',
     'PaymentType': 'aio',
     'TotalAmount': '30000',
