@@ -320,3 +320,34 @@ else:
 #     print("失敗：", response.status_code)
 
 
+
+#!　綠界金流encode
+import urllib.parse
+import hashlib
+def custom_urlencode(input_str, char_to_encode):
+    encoded_chars = []
+    
+    
+    for char in input_str:
+        if char in char_to_encode:
+            encoded_chars.append(char)
+        elif char == " ":
+            encoded_chars.append("+")
+        elif char == "/":
+            encoded_chars.append("%2f")
+        elif char == "\\":
+            encoded_chars.append("%5c")
+        else:
+            encoded_chars.append(urllib.parse.quote(char))
+    res = ''.join(encoded_chars)
+    lowercase_data = res.lower()
+    hash_obj = hashlib.sha256()
+    hash_obj.update(lowercase_data.encode('utf-8'))
+    hash_value = hash_obj.hexdigest()
+    check_mac_value = hash_value.upper()
+    return check_mac_value
+
+input_str = "HashKey=pwFHCqoQZGmho4w6&ChoosePayment=ALL&EncryptType=1&ItemName=Apple iphone 15&MerchantID=3002607&MerchantTradeDate=2023/03/12 15:30:23&MerchantTradeNo=ecpay20230312153023&PaymentType=aio&ReturnURL=https://www.ecpay.com.tw/receive.php&TotalAmount=30000&TradeDesc=促銷方案&HashIV=EkRm7iFT261dpevs"
+char_to_encode = "–_.!*()"
+encoded_str = custom_urlencode(input_str, char_to_encode)
+print(encoded_str)
