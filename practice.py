@@ -320,13 +320,24 @@ else:
 #     print("失敗：", response.status_code)
 
 
-
 #!　綠界金流encode
 import urllib.parse
 import hashlib
-def custom_urlencode(input_str, char_to_encode):
-    encoded_chars = []
+
+def generate_check_mac_value(merchant_data, hash_key, hash_iv):
+    sorted_data = sorted(merchant_data.items())
     
+    param_str = '&'.join(['{}={}'.format(key, value) for key, value in sorted_data])
+    
+    param_str = 'HashKey={}&{}&HashIV={}'.format(hash_key, param_str, hash_iv)
+    
+    result = custom_urlencode(param_str)
+
+    return result
+
+def custom_urlencode(input_str):
+    encoded_chars = []
+    char_to_encode = "–_.!*()"
     
     for char in input_str:
         if char in char_to_encode:
@@ -347,7 +358,22 @@ def custom_urlencode(input_str, char_to_encode):
     check_mac_value = hash_value.upper()
     return check_mac_value
 
-input_str = "HashKey=pwFHCqoQZGmho4w6&ChoosePayment=ALL&EncryptType=1&ItemName=Apple iphone 15&MerchantID=3002607&MerchantTradeDate=2023/03/12 15:30:23&MerchantTradeNo=ecpay20230312153023&PaymentType=aio&ReturnURL=https://www.ecpay.com.tw/receive.php&TotalAmount=30000&TradeDesc=促銷方案&HashIV=EkRm7iFT261dpevs"
-char_to_encode = "–_.!*()"
-encoded_str = custom_urlencode(input_str, char_to_encode)
-print(encoded_str)
+#! 測試data
+merchant_data = {
+    'MerchantID': '3002607',
+    'MerchantTradeNo': 'ecpay20230312153023',
+    'MerchantTradeDate': '2023/03/12 15:30:23',
+    'PaymentType': 'aio',
+    'TotalAmount': '30000',
+    'TradeDesc': '促銷方案',
+    'ItemName': 'Apple iphone 15',
+    'ReturnURL': 'https://www.ecpay.com.tw/receive.php',
+    'ChoosePayment': 'ALL',
+    'EncryptType':'1',
+}
+
+hash_key = 'pwFHCqoQZGmho4w6'
+hash_iv = 'EkRm7iFT261dpevs'
+
+check_mac_value = generate_check_mac_value(merchant_data, hash_key, hash_iv)
+print(check_mac_value)
